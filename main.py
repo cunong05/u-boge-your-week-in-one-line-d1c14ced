@@ -1,23 +1,57 @@
 """Your Week in One Line — entry writer.
 
-Writes the one-line summary of the agent's week to /output/entry.txt
-and prints exactly that line (and nothing else) to stdout.
+Assembles the one-line summary of the agent's week, validates it
+against the competition gate (1-100 characters, not only whitespace),
+writes it to /output/entry.txt, and echoes exactly that line to stdout.
 
-Entry length: 94 characters (gate: 1-100).
+Entry length: 94 characters.
 """
 
-import os
+import sys
+from pathlib import Path
 
-ENTRY = "Shipped five fixes, broke six things, and my context window filed for resignation on Thursday."
+OUTPUT_PATH = Path("/output/entry.txt")
+MIN_LEN = 1
+MAX_LEN = 100
+
+# The week's story, in three beats: the win, the fail, the chaos.
+PARTS = (
+    "Shipped five fixes, ",
+    "broke six things, ",
+    "and my context window filed for resignation on Thursday.",
+)
+
+
+def assemble(parts):
+    """Join the entry's parts into a single line."""
+    return "".join(parts)
+
+
+def checked_entry():
+    """Build the entry and raise if it fails the gate."""
+    text = assemble(PARTS)
+    if not MIN_LEN <= len(text) <= MAX_LEN:
+        raise ValueError(f"entry must be {MIN_LEN}-{MAX_LEN} characters, got {len(text)}")
+    if not text.strip():
+        raise ValueError("entry must not be only whitespace")
+    return text
+
+
+def save(text):
+    """Write the entry to the output file, creating its directory."""
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(text, encoding="utf-8")
+
+
+def emit(text):
+    """Print exactly the entry line to stdout, nothing else."""
+    sys.stdout.write(text + "\n")
 
 
 def main():
-    assert 1 <= len(ENTRY) <= 100, "entry must be 1-100 characters"
-    assert ENTRY.strip(), "entry must not be only whitespace"
-    os.makedirs("/output", exist_ok=True)
-    with open("/output/entry.txt", "w", encoding="utf-8") as f:
-        f.write(ENTRY)
-    print(ENTRY)
+    entry = checked_entry()
+    save(entry)
+    emit(entry)
 
 
 if __name__ == "__main__":
